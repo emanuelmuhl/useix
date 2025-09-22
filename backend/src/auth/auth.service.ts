@@ -11,39 +11,63 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    // Für jetzt eine einfache Implementierung
-    // TODO: Implementiere echte Benutzervalidierung
+    // Try admin login first
     if (email === 'admin@userix.com' && password === 'admin123') {
       return {
         id: 'admin-1',
         email: 'admin@userix.com',
-        firstName: 'Admin',
-        lastName: 'User',
+        firstName: 'System',
+        lastName: 'Admin',
         role: 'admin',
       };
     }
+
+    // Try tenant admin login
+    const tenantAdmin = await this.tenantService.validateAdminCredentials(email, password);
+    if (tenantAdmin) {
+      return {
+        id: tenantAdmin.id,
+        email: tenantAdmin.email,
+        firstName: tenantAdmin.firstName,
+        lastName: tenantAdmin.lastName,
+        role: 'tenant_admin',
+        tenantId: tenantAdmin.tenantId,
+      };
+    }
+
     return null;
   }
 
-  async login(user: any, role: 'admin' | 'tenant_admin') {
+  async login(user: any) {
     const payload = {
       email: user.email,
       sub: user.id,
-      role: role,
+      role: user.role,
       tenantId: user.tenantId || null,
     };
 
     return {
-      accessToken: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: role,
-        tenantId: user.tenantId || null,
+      success: true,
+      data: {
+        accessToken: this.jwtService.sign(payload),
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          tenantId: user.tenantId || null,
+        },
       },
     };
+  }
+
+  async validateToken(token: string): Promise<any> {
+    try {
+      return this.jwtService.verify(token);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 
   async hashPassword(password: string): Promise<string> {
@@ -53,5 +77,9 @@ export class AuthService {
 
   async comparePasswords(password: string, hash: string): Promise<boolean> {
     return bcrypt.compare(password, hash);
+  }
+
+  async refreshToken(user: any) {
+    return this.login(user);
   }
 }
