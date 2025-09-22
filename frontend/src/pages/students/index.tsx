@@ -62,7 +62,7 @@ export default function Students() {
     return matchesSearch && matchesClass;
   });
 
-  const classes = [...new Set(students.map(s => s.className))];
+  const classes = Array.from(new Set(students.map(s => s.className)));
 
   return (
     <>
