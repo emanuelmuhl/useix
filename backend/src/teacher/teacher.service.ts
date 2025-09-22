@@ -29,6 +29,7 @@ export class TeacherService {
     const teacher = this.teacherRepository.create({
       ...createTeacherDto,
       teacherId,
+      subjects: createTeacherDto.subjects ? JSON.stringify(createTeacherDto.subjects) : undefined,
     });
 
     const savedTeacher = await this.teacherRepository.save(teacher);
@@ -108,7 +109,12 @@ export class TeacherService {
       }
     }
 
-    Object.assign(teacher, updateTeacherDto);
+    const updateData = {
+      ...updateTeacherDto,
+      subjects: updateTeacherDto.subjects ? JSON.stringify(updateTeacherDto.subjects) : teacher.subjects,
+    };
+
+    Object.assign(teacher, updateData);
     const savedTeacher = await this.teacherRepository.save(teacher);
     return Array.isArray(savedTeacher) ? savedTeacher[0] : savedTeacher;
   }

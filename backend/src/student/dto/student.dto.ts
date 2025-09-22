@@ -110,6 +110,11 @@ export class StudentFilterDto {
   @IsString()
   teacherId?: string;
 
+  @ApiProperty({ description: 'Filter by tenant', required: false })
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
+
   @ApiProperty({ description: 'Page number', required: false })
   @IsOptional()
   page?: number;
