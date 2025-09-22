@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { SchoolBuildingIcon, UserGroupIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
+import { AcademicCapIcon, UserGroupIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   return (
@@ -18,7 +18,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <SchoolBuildingIcon className="h-8 w-8 text-primary-600" />
+                <AcademicCapIcon className="h-8 w-8 text-primary-600" />
                 <h1 className="ml-3 text-2xl font-bold text-gray-900">Userix</h1>
               </div>
               <div className="flex space-x-4">
@@ -61,7 +61,7 @@ export default function Home() {
 
             <div className="card">
               <div className="card-body text-center">
-                <SchoolBuildingIcon className="h-12 w-12 text-primary-600 mx-auto mb-4" />
+                <AcademicCapIcon className="h-12 w-12 text-primary-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3">Mandantenfähig</h3>
                 <p className="text-gray-600">
                   Jede Schule erhält ihre eigene Instanz mit separater Datenbank 
