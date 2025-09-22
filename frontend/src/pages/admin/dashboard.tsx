@@ -76,8 +76,8 @@ export default function AdminDashboard() {
 
       // Calculate system stats
       const tenants = tenantsResponse.data || [];
-      const totalStudents = tenants.reduce((sum, t) => sum + (t.stats?.students || 0), 0);
-      const totalTeachers = tenants.reduce((sum, t) => sum + (t.stats?.teachers || 0), 0);
+      const totalStudents = tenants.reduce((sum: number, t: any) => sum + (t.stats?.students || 0), 0);
+      const totalTeachers = tenants.reduce((sum: number, t: any) => sum + (t.stats?.teachers || 0), 0);
 
       setStats({
         totalTenants: tenantsResponse.total || 0,
