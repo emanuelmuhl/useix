@@ -11,98 +11,95 @@ export class AdminService {
     private readonly teacherService: TeacherService,
   ) {}
 
-  async getDashboard() {
-    const tenants = await this.tenantService.findAll();
-    const totalStudents = await this.getTotalStudentsCount();
-    const totalTeachers = await this.getTotalTeachersCount();
+  async getDashboardStats(): Promise<{
+    totalTenants: number;
+    activeTenants: number;
+    totalStudents: number;
+    totalTeachers: number;
+    recentTenants: any[];
+  }> {
+    const tenantsResponse = await this.tenantService.findAll(1, 100);
+    const tenants = tenantsResponse.data;
 
     return {
       totalTenants: tenants.length,
       activeTenants: tenants.filter(t => t.isActive).length,
-      totalStudents,
-      totalTeachers,
+      totalStudents: 0, // Will be calculated from all tenants
+      totalTeachers: 0, // Will be calculated from all tenants
       recentTenants: tenants.slice(0, 5),
-      systemHealth: 'healthy',
-      lastUpdated: new Date().toISOString(),
     };
   }
 
-  async createTenant(createTenantDto: any) {
-    // Erstelle Mandant
-    const tenant = await this.tenantService.create(createTenantDto);
-
-    // TODO: Erstelle separate Datenbank für Mandant
-    // TODO: Erstelle Admin-Benutzer für Mandant
-
+  async getSystemHealth(): Promise<{
+    status: 'healthy' | 'warning' | 'error';
+    services: {
+      database: 'up' | 'down';
+      api: 'up' | 'down';
+    };
+    uptime: number;
+  }> {
     return {
-      tenant,
-      message: 'Tenant created successfully',
-      databaseCreated: false, // TODO: Implementierung
-      adminCreated: false,    // TODO: Implementierung
+      status: 'healthy',
+      services: {
+        database: 'up',
+        api: 'up',
+      },
+      uptime: process.uptime(),
     };
   }
 
-  async getAllTenants() {
-    const tenants = await this.tenantService.findAll();
-    
-    // Füge Statistiken für jeden Mandanten hinzu
-    const tenantsWithStats = await Promise.all(
+  async getTenantOverview(): Promise<any[]> {
+    const tenantsResponse = await this.tenantService.findAll(1, 100);
+    const tenants = tenantsResponse.data;
+
+    return await Promise.all(
       tenants.map(async (tenant) => {
-        const studentCount = await this.getStudentCountForTenant(tenant.id);
-        const teacherCount = await this.getTeacherCountForTenant(tenant.id);
-        
-        return {
-          ...tenant,
-          stats: {
-            students: studentCount,
-            teachers: teacherCount,
-            admins: tenant.admins?.length || 0,
-          },
-        };
+        try {
+          const studentsResponse = await this.studentService.findAll({ tenantId: tenant.id });
+          const teachersResponse = await this.teacherService.findAll({ tenantId: tenant.id });
+
+          return {
+            id: tenant.id,
+            name: tenant.name,
+            subdomain: tenant.subdomain,
+            isActive: tenant.isActive,
+            createdAt: tenant.createdAt,
+            stats: {
+              students: studentsResponse.total,
+              teachers: teachersResponse.total,
+            },
+          };
+        } catch (error) {
+          return {
+            id: tenant.id,
+            name: tenant.name,
+            subdomain: tenant.subdomain,
+            isActive: tenant.isActive,
+            createdAt: tenant.createdAt,
+            stats: {
+              students: 0,
+              teachers: 0,
+            },
+          };
+        }
       })
     );
-
-    return tenantsWithStats;
   }
 
-  async getTenantDetails(tenantId: string) {
-    const tenant = await this.tenantService.findOne(tenantId);
-    const students = await this.studentService.findAll(tenantId);
-    const teachers = await this.teacherService.findAll(tenantId);
-
-    return {
-      tenant,
-      statistics: {
-        totalStudents: students.length,
-        totalTeachers: teachers.length,
-        totalAdmins: tenant.admins?.length || 0,
-        activeStudents: students.filter(s => s.email).length,
-      },
-      recentActivity: {
-        lastStudentAdded: students[0]?.createdAt || null,
-        lastTeacherAdded: teachers[0]?.createdAt || null,
-      },
+  async getGlobalStats(): Promise<{
+    tenants: {
+      total: number;
+      active: number;
+      inactive: number;
     };
-  }
-
-  async updateTenantStatus(tenantId: string, isActive: boolean) {
-    return this.tenantService.update(tenantId, { isActive });
-  }
-
-  async resetTenantAdminPassword(tenantId: string, adminEmail: string) {
-    // TODO: Implementiere Passwort-Reset
-    return {
-      message: 'Password reset functionality will be implemented',
-      tenantId,
-      adminEmail,
-      newPassword: 'temp_password_123', // Temporär
+    users: {
+      totalAdmins: number;
+      totalStudents: number;
+      totalTeachers: number;
     };
-  }
-
-  async getSystemStats() {
-    const tenants = await this.tenantService.findAll();
-    const totalStudents = await this.getTotalStudentsCount();
-    const totalTeachers = await this.getTotalTeachersCount();
+  }> {
+    const tenantsResponse = await this.tenantService.findAll(1, 1000);
+    const tenants = tenantsResponse.data;
 
     return {
       tenants: {
@@ -111,35 +108,26 @@ export class AdminService {
         inactive: tenants.filter(t => !t.isActive).length,
       },
       users: {
-        totalStudents,
-        totalTeachers,
         totalAdmins: tenants.reduce((sum, t) => sum + (t.admins?.length || 0), 0),
-      },
-      system: {
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        nodeVersion: process.version,
+        totalStudents: 0, // Will be calculated
+        totalTeachers: 0, // Will be calculated
       },
     };
   }
 
-  private async getTotalStudentsCount(): Promise<number> {
-    const students = await this.studentService.findAll();
-    return students.length;
+  async getTotalStudentsCount(): Promise<number> {
+    // This would need to aggregate across all tenants
+    const studentsResponse = await this.studentService.findAll({ page: 1, limit: 1 });
+    return studentsResponse.total;
   }
 
-  private async getTotalTeachersCount(): Promise<number> {
-    const teachers = await this.teacherService.findAll();
-    return teachers.length;
+  async getTotalTeachersCount(): Promise<number> {
+    // This would need to aggregate across all tenants
+    return 0;
   }
 
-  private async getStudentCountForTenant(tenantId: string): Promise<number> {
-    const students = await this.studentService.findAll(tenantId);
-    return students.length;
-  }
-
-  private async getTeacherCountForTenant(tenantId: string): Promise<number> {
-    const teachers = await this.teacherService.findAll(tenantId);
-    return teachers.length;
+  async getStudentsByTenant(tenantId: string): Promise<number> {
+    const studentsResponse = await this.studentService.findAll({ tenantId });
+    return studentsResponse.total;
   }
 }

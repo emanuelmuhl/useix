@@ -2,60 +2,95 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } f
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StudentService } from './student.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateStudentDto, UpdateStudentDto, ImportStudentsDto, StudentFilterDto } from './dto/student.dto';
 
 @ApiTags('Students')
 @Controller('students')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @ApiOperation({ summary: 'Create new student' })
   @ApiResponse({ status: 201, description: 'Student created successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post()
-  create(@Body() createStudentDto: any) {
+  async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
   }
 
-  @ApiOperation({ summary: 'Get all students' })
+  @ApiOperation({ summary: 'Get all students with filters' })
   @ApiResponse({ status: 200, description: 'List of students' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get()
-  findAll(@Query('tenantId') tenantId?: string) {
-    return this.studentService.findAll(tenantId);
+  async findAll(@Query() filters: StudentFilterDto) {
+    return this.studentService.findAll(filters);
   }
 
   @ApiOperation({ summary: 'Get student by ID' })
   @ApiResponse({ status: 200, description: 'Student details' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.studentService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Update student' })
   @ApiResponse({ status: 200, description: 'Student updated successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStudentDto: any) {
+  async update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
     return this.studentService.update(id, updateStudentDto);
   }
 
   @ApiOperation({ summary: 'Delete student' })
   @ApiResponse({ status: 200, description: 'Student deleted successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.studentService.remove(id);
   }
 
   @ApiOperation({ summary: 'Import students from CSV' })
-  @ApiResponse({ status: 200, description: 'Students imported successfully' })
+  @ApiResponse({ status: 201, description: 'Students imported successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('import')
-  importStudents(@Body() importData: any) {
+  async importStudents(@Body() importData: ImportStudentsDto) {
     return this.studentService.importStudents(importData);
   }
 
-  @ApiOperation({ summary: 'Export students to Excel' })
+  @ApiOperation({ summary: 'Export students to CSV/Excel' })
   @ApiResponse({ status: 200, description: 'Students exported successfully' })
-  @Get('export/excel')
-  exportToExcel(@Query('tenantId') tenantId: string) {
-    return this.studentService.exportToExcel(tenantId);
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('export/:tenantId')
+  async exportStudents(
+    @Param('tenantId') tenantId: string,
+    @Query('format') format: 'csv' | 'xlsx' = 'csv'
+  ) {
+    return this.studentService.exportStudents(tenantId, format);
+  }
+
+  @ApiOperation({ summary: 'Get student statistics by tenant' })
+  @ApiResponse({ status: 200, description: 'Student statistics' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('stats/:tenantId')
+  async getStats(@Param('tenantId') tenantId: string) {
+    return this.studentService.getStatsByTenant(tenantId);
+  }
+
+  @ApiOperation({ summary: 'Health check for student service' })
+  @Get('health/check')
+  healthCheck() {
+    return { 
+      status: 'ok', 
+      service: 'student',
+      timestamp: new Date().toISOString()
+    };
   }
 }

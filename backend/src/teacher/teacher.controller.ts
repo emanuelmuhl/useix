@@ -2,53 +2,95 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } f
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TeacherService } from './teacher.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateTeacherDto, UpdateTeacherDto, ImportTeachersDto, TeacherFilterDto } from './dto/teacher.dto';
 
 @ApiTags('Teachers')
 @Controller('teachers')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class TeacherController {
   constructor(private readonly teacherService: TeacherService) {}
 
   @ApiOperation({ summary: 'Create new teacher' })
   @ApiResponse({ status: 201, description: 'Teacher created successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post()
-  create(@Body() createTeacherDto: any) {
+  async create(@Body() createTeacherDto: CreateTeacherDto) {
     return this.teacherService.create(createTeacherDto);
   }
 
-  @ApiOperation({ summary: 'Get all teachers' })
+  @ApiOperation({ summary: 'Get all teachers with filters' })
   @ApiResponse({ status: 200, description: 'List of teachers' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get()
-  findAll(@Query('tenantId') tenantId?: string) {
-    return this.teacherService.findAll(tenantId);
+  async findAll(@Query() filters: TeacherFilterDto) {
+    return this.teacherService.findAll(filters);
   }
 
   @ApiOperation({ summary: 'Get teacher by ID' })
   @ApiResponse({ status: 200, description: 'Teacher details' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.teacherService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Update teacher' })
   @ApiResponse({ status: 200, description: 'Teacher updated successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTeacherDto: any) {
+  async update(@Param('id') id: string, @Body() updateTeacherDto: UpdateTeacherDto) {
     return this.teacherService.update(id, updateTeacherDto);
   }
 
   @ApiOperation({ summary: 'Delete teacher' })
   @ApiResponse({ status: 200, description: 'Teacher deleted successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.teacherService.remove(id);
   }
 
-  @ApiOperation({ summary: 'Get students assigned to teacher' })
-  @ApiResponse({ status: 200, description: 'List of students' })
-  @Get(':id/students')
-  getStudents(@Param('id') id: string) {
-    return this.teacherService.getStudents(id);
+  @ApiOperation({ summary: 'Import teachers from CSV' })
+  @ApiResponse({ status: 201, description: 'Teachers imported successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('import')
+  async importTeachers(@Body() importData: ImportTeachersDto) {
+    return this.teacherService.importTeachers(importData.tenantId, importData.teachers);
+  }
+
+  @ApiOperation({ summary: 'Export teachers to CSV/Excel' })
+  @ApiResponse({ status: 200, description: 'Teachers exported successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('export/:tenantId')
+  async exportTeachers(
+    @Param('tenantId') tenantId: string,
+    @Query('format') format: 'csv' | 'xlsx' = 'csv'
+  ) {
+    return this.teacherService.exportTeachers(tenantId, format);
+  }
+
+  @ApiOperation({ summary: 'Get teacher statistics by tenant' })
+  @ApiResponse({ status: 200, description: 'Teacher statistics' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('stats/:tenantId')
+  async getStats(@Param('tenantId') tenantId: string) {
+    return this.teacherService.getStatsByTenant(tenantId);
+  }
+
+  @ApiOperation({ summary: 'Health check for teacher service' })
+  @Get('health/check')
+  healthCheck() {
+    return { 
+      status: 'ok', 
+      service: 'teacher',
+      timestamp: new Date().toISOString()
+    };
   }
 }

@@ -24,13 +24,14 @@ export class TenantAdmin {
   @Column({ default: true })
   isActive: boolean;
 
-  @ManyToOne(() => Tenant, tenant => tenant.admins)
-  @JoinColumn({ name: 'tenantId' })
-  tenant: Tenant;
-
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relations
+  @ManyToOne(() => Tenant, tenant => tenant.admins)
+  @JoinColumn({ name: 'tenantId' })
+  tenant: Tenant;
 }

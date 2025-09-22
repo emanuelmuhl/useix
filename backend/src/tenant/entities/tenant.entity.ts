@@ -6,31 +6,32 @@ export class Tenant {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column()
   name: string;
 
   @Column({ unique: true })
   subdomain: string;
 
-  @Column({ unique: true })
+  @Column()
   databaseName: string;
 
   @Column({ default: true })
   isActive: boolean;
 
-  @Column('json', { nullable: true })
-  settings: {
+  @Column({ type: 'json', nullable: true })
+  settings?: {
     maxStudents: number;
     maxTeachers: number;
     features: string[];
   };
-
-  @OneToMany(() => TenantAdmin, admin => admin.tenant)
-  admins: TenantAdmin[];
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relations
+  @OneToMany(() => TenantAdmin, admin => admin.tenant)
+  admins: TenantAdmin[];
 }
