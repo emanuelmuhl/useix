@@ -16,7 +16,8 @@ export class TeacherService {
       teacherId: `TEA-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
     });
 
-    return await this.teacherRepository.save(teacher);
+    const savedTeacher = await this.teacherRepository.save(teacher);
+    return Array.isArray(savedTeacher) ? savedTeacher[0] : savedTeacher;
   }
 
   async findAll(tenantId?: string): Promise<Teacher[]> {

@@ -20,7 +20,8 @@ export class StudentService {
       studentId: `STU-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
     });
 
-    return await this.studentRepository.save(student);
+    const savedStudent = await this.studentRepository.save(student);
+    return Array.isArray(savedStudent) ? savedStudent[0] : savedStudent;
   }
 
   async findAll(tenantId?: string): Promise<Student[]> {
