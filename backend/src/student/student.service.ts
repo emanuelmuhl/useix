@@ -20,7 +20,7 @@ export class StudentService {
       studentId: `STU-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
     });
 
-    return this.studentRepository.save(student);
+    return await this.studentRepository.save(student);
   }
 
   async findAll(tenantId?: string): Promise<Student[]> {
@@ -86,7 +86,7 @@ export class StudentService {
     };
   }
 
-  async generateIpadCode(): string {
+  async generateIpadCode(): Promise<string> {
     // Generiere 4- oder 6-stelligen iPad-Code
     const length = Math.random() > 0.5 ? 4 : 6;
     return Math.random().toString().slice(2, 2 + length);
