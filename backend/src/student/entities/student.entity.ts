@@ -7,11 +7,8 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  tenantId: string;
-
   @Column({ unique: true })
-  studentId: string; // Eindeutige Schüler-ID
+  studentId: string;
 
   @Column()
   firstName: string;
@@ -19,35 +16,42 @@ export class Student {
   @Column()
   lastName: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column({ nullable: true })
-  office365Password: string;
+  office365Password?: string;
 
   @Column()
   ipadCode: string;
 
   @Column()
-  classId: string;
+  className: string;
 
   @Column({ type: 'enum', enum: ['A', 'B', 'C'], nullable: true })
-  classAddition: 'A' | 'B' | 'C';
+  classAddition?: 'A' | 'B' | 'C';
 
   @Column({ nullable: true })
-  teacherId: string;
+  teacherId?: string;
 
-  @ManyToOne(() => Class)
-  @JoinColumn({ name: 'classId' })
-  class: Class;
+  @Column()
+  tenantId: string;
 
-  @ManyToOne(() => Teacher)
-  @JoinColumn({ name: 'teacherId' })
-  teacher: Teacher;
+  @Column({ nullable: true })
+  classId?: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relations
+  @ManyToOne(() => Teacher, { nullable: true })
+  @JoinColumn({ name: 'teacherId' })
+  teacher?: Teacher;
+
+  @ManyToOne(() => Class, { nullable: true })
+  @JoinColumn({ name: 'classId' })
+  class?: Class;
 }

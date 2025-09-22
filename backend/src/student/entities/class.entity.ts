@@ -7,23 +7,30 @@ export class Class {
   id: string;
 
   @Column()
-  tenantId: string;
-
-  @Column()
-  name: string; // z.B. "PR1", "PR2"
+  name: string;
 
   @Column()
   year: number;
 
+  @Column()
+  tenantId: string;
+
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToMany(() => Student, student => student.class)
-  students: Student[];
+  @Column({ nullable: true })
+  description?: string;
+
+  @Column({ nullable: true })
+  teacherId?: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relations
+  @OneToMany(() => Student, student => student.class)
+  students: Student[];
 }
