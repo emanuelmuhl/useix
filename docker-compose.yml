@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: userix-postgres
+    environment:
+      POSTGRES_DB: userix_main
+      POSTGRES_USER: userix
+      POSTGRES_PASSWORD: userix_password_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - userix-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: userix-backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://userix:userix_password_2024@postgres:5432/userix_main
+      JWT_SECRET: userix_jwt_secret_2024_very_secure
+      PORT: 3101
+    ports:
+      - "3101:3101"
+    depends_on:
+      - postgres
+    networks:
+      - userix-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: userix-frontend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3101
+    ports:
+      - "3102:3102"
+    depends_on:
+      - backend
+    networks:
+      - userix-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+
+networks:
+  userix-network:
+    driver: bridge
