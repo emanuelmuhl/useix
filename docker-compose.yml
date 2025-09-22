@@ -30,9 +30,7 @@ services:
       - postgres
     networks:
       - userix-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    restart: unless-stopped
 
   frontend:
     build:
@@ -48,9 +46,7 @@ services:
       - backend
     networks:
       - userix-network
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    restart: unless-stopped
 
 volumes:
   postgres_data:

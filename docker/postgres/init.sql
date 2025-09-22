@@ -2,7 +2,7 @@
 -- Diese Datei wird beim ersten Start der PostgreSQL-Instanz ausgeführt
 
 -- Erstelle die Hauptdatenbank (falls nicht existiert)
-CREATE DATABASE userix_main;
+SELECT 'CREATE DATABASE userix_main' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'userix_main')\gexec
 
 -- Wechsle zur Hauptdatenbank
 \c userix_main;
