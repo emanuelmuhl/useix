@@ -81,7 +81,7 @@ export default function AdminDashboard() {
 
       setStats({
         totalTenants: tenantsResponse.total || 0,
-        activeTenants: tenants.filter(t => t.isActive).length,
+        activeTenants: tenants.filter((t: any) => t.isActive).length,
         totalStudents,
         totalTeachers,
         systemHealth: 'healthy',
